@@ -1,0 +1,50 @@
+<!-- Add this after your existing JavaScript -->
+<script>
+// Additional utilities for better error handling
+
+// Show a more detailed status message
+function updateStatus(message, isError = false) {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = message;
+    if (isError) {
+        statusEl.style.color = '#b42318';
+    } else {
+        statusEl.style.color = '';
+    }
+}
+
+// Check if code is empty
+function isCodeEmpty() {
+    const code = document.getElementById('code').value.trim();
+    const file = document.getElementById('file').files[0];
+    return !code && !file;
+}
+
+// Add validation before generating
+document.getElementById('generate').addEventListener('click', async function(e) {
+    if (isCodeEmpty()) {
+        showAlert('Please paste code or upload a file first.');
+        return;
+    }
+    
+    // The rest of your existing generate logic...
+    setBusy(true, 'Generating tests...');
+    // ... rest of existing code
+});
+
+// Better error handling for API calls
+async function parseResponse(response) {
+    try {
+        const data = await response.json();
+        if (!response.ok || data.success === false) {
+            throw new Error(data.error || 'Request failed.');
+        }
+        return data;
+    } catch (error) {
+        if (error.message === 'Failed to fetch') {
+            throw new Error('Server is not responding. Is the Flask app running?');
+        }
+        throw error;
+    }
+}
+</script>

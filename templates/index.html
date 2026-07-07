@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TestGen AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+</head>
+<body>
+    <main class="shell">
+        <section class="workspace">
+            <div class="pane input-pane">
+                <header class="topbar">
+                    <div>
+                        <h1>🧪 TestGen AI</h1>
+                        <p>Generate and run unit tests for Python, Java, and JavaScript</p>
+                    </div>
+                    <select id="language">
+                        <option value="python" selected>Python</option>
+                        <option value="java">Java</option>
+                        <option value="javascript">JavaScript</option>
+                    </select>
+                </header>
+
+                <label for="code">📝 Code</label>
+                <textarea id="code" spellcheck="false" placeholder="Paste your code here..."></textarea>
+
+                <div class="file-row">
+                    <input id="file" type="file" accept=".py,.java,.js">
+                    <span id="fileName">No file selected</span>
+                </div>
+
+                <label for="requirements">📋 Requirements</label>
+                <textarea id="requirements" class="short" spellcheck="false" placeholder="What should this code do? (e.g., The function should add two numbers and handle edge cases)"></textarea>
+
+                <button id="generate" class="primary">🚀 Generate Tests</button>
+            </div>
+
+            <div class="pane result-pane">
+                <div class="result-head">
+                    <div>
+                        <h2>📊 Generated Tests</h2>
+                        <p id="status">Ready</p>
+                    </div>
+                    <div class="actions">
+                        <button id="copy" disabled>📋 Copy</button>
+                        <button id="download" disabled>💾 Download</button>
+                        <button id="run" disabled>▶️ Run Tests</button>
+                    </div>
+                </div>
+
+                <div id="alert" class="alert" hidden></div>
+                <pre class="code-box"><code id="tests" class="language-python"></code></pre>
+
+                <h2>📈 Test Output</h2>
+                <pre id="output" class="output">No tests run yet.</pre>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script>
+        const state = { testFile: "", codeFile: "", language: "python", tests: "" };
+        const el = (id) => document.getElementById(id);
+        const prismLanguage = { python: "python", java: "java", javascript: "javascript" };
+
+        el("file").addEventListener("change", () => {
+            const file = el("file").files[0];
+            el("fileName").textContent = file ? file.name : "No file selected";
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { el("code").value = reader.result; };
+            reader.readAsText(file);
+        });
+
+        el("generate").addEventListener("click", async () => {
+            setBusy(true, "Generating tests...");
+            clearAlert();
+            el("output").textContent = "No tests run yet.";
+
+            const form = new FormData();
+            form.append("language", el("language").value);
+            form.append("code", el("code").value);
+            form.append("requirements", el("requirements").value);
+            if (el("file").files[0]) form.append("code_file", el("file").files[0]);
+
+            try {
+                const data = await postForm("/generate_tests", form);
+                state.testFile = data.test_file;
+                state.codeFile = data.code_file;
+                state.language = data.language;
+                state.tests = data.tests;
+                renderTests(data.tests, data.language);
+                setActions(true);
+                el("status").textContent = "✅ Generated " + data.test_file;
+            } catch (error) {
+                showAlert(error.message);
+                setActions(false);
+                el("status").textContent = "❌ Generation failed";
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        el("copy").addEventListener("click", async () => {
+            await navigator.clipboard.writeText(state.tests);
+            el("status").textContent = "📋 Copied!";
+            setTimeout(() => { el("status").textContent = "Ready"; }, 2000);
+        });
+
+        el("download").addEventListener("click", () => {
+            if (state.testFile) window.location.href = "/download_test/" + encodeURIComponent(state.testFile);
+        });
+
+        el("run").addEventListener("click", async () => {
+            setBusy(true, "Running tests...");
+            clearAlert();
+            try {
+                const data = await postJson("/run_tests", {
+                    language: state.language,
+                    test_file: state.testFile,
+                    code_file: state.codeFile,
+                });
+                el("output").textContent = data.output || data.error || "No output.";
+                el("status").textContent = data.success ? "✅ Tests passed" : "❌ Tests failed";
+                if (!data.success && data.error) showAlert(data.error);
+            } catch (error) {
+                showAlert(error.message);
+                el("status").textContent = "❌ Run failed";
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        function renderTests(code, language) {
+            const codeEl = el("tests");
+            codeEl.className = "language-" + prismLanguage[language];
+            codeEl.textContent = code;
+            Prism.highlightElement(codeEl);
+        }
+
+        async function postForm(url, body) {
+            const response = await fetch(url, { method: "POST", body });
+            return parseResponse(response);
+        }
+
+        async function postJson(url, body) {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            return parseResponse(response);
+        }
+
+        async function parseResponse(response) {
+            const data = await response.json();
+            if (!response.ok || data.success === false) throw new Error(data.error || "Request failed.");
+            return data;
+        }
+
+        function setBusy(isBusy, text = "Ready") {
+            el("generate").disabled = isBusy;
+            el("run").disabled = isBusy || !state.testFile;
+            el("status").textContent = isBusy ? text : el("status").textContent;
+        }
+
+        function setActions(enabled) {
+            el("copy").disabled = !enabled;
+            el("download").disabled = !enabled;
+            el("run").disabled = !enabled;
+        }
+
+        function showAlert(message) {
+            el("alert").textContent = "⚠️ " + message;
+            el("alert").hidden = false;
+        }
+
+        function clearAlert() {
+            el("alert").hidden = true;
+            el("alert").textContent = "";
+        }
+    </script>
+</body>
+</html>

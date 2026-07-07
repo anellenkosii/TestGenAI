@@ -1,0 +1,16 @@
+# docker-compose.yml - For running Java tests in a container
+version: '3.8'
+
+services:
+  testgen-ai:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - USE_OLLAMA=${USE_OLLAMA:-false}
+      - JUNIT_JAR=/app/junit-platform-console-standalone-1.10.2.jar
+    volumes:
+      - ./uploads:/app/uploads
+      - ./generated_tests:/app/generated_tests
+    command: python app.py
