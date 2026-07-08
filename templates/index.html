@@ -13,48 +13,78 @@
             <div class="pane input-pane">
                 <header class="topbar">
                     <div>
-                        <h1>🧪 TestGen AI</h1>
-                        <p>Generate and run unit tests for Python, Java, and JavaScript</p>
+                        <h1>TestGen AI</h1>
+                        <p>Generate, inspect, and run unit tests.</p>
                     </div>
-                    <select id="language">
-                        <option value="python" selected>Python</option>
-                        <option value="java">Java</option>
-                        <option value="javascript">JavaScript</option>
-                    </select>
+                    <div class="controls">
+                        <select id="language">
+                            <option value="python" selected>Python</option>
+                            <option value="java">Java</option>
+                            <option value="javascript">JavaScript</option>
+                        </select>
+                        <select id="mode">
+                            <option value="standard" selected>Standard</option>
+                            <option value="tdd">TDD</option>
+                        </select>
+                    </div>
                 </header>
 
-                <label for="code">📝 Code</label>
-                <textarea id="code" spellcheck="false" placeholder="Paste your code here..."></textarea>
-
-                <div class="file-row">
-                    <input id="file" type="file" accept=".py,.java,.js">
-                    <span id="fileName">No file selected</span>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="code">Code</button>
+                    <button class="tab-btn" data-tab="analyze">Analyze</button>
                 </div>
 
-                <label for="requirements">📋 Requirements</label>
-                <textarea id="requirements" class="short" spellcheck="false" placeholder="What should this code do? (e.g., The function should add two numbers and handle edge cases)"></textarea>
+                <div id="tab-code" class="tab-content active">
+                    <label for="code">Code</label>
+                    <textarea id="code" spellcheck="false" placeholder="Paste code here"></textarea>
+                    <div class="file-row">
+                        <input id="file" type="file" accept=".py,.java,.js">
+                        <span id="fileName">No file selected</span>
+                    </div>
+                    <label for="requirements">Requirements</label>
+                    <textarea id="requirements" class="short" spellcheck="false" placeholder="What should this code do?"></textarea>
+                </div>
 
-                <button id="generate" class="primary">🚀 Generate Tests</button>
+                <div id="tab-analyze" class="tab-content">
+                    <label for="description">Project Description</label>
+                    <textarea id="description" class="short" spellcheck="false" placeholder="Describe the expected behavior"></textarea>
+                    <button id="analyzeBtn" class="secondary">Analyze Code</button>
+                    <div id="analysisResult"></div>
+                </div>
+
+                <div class="button-group">
+                    <button id="generate" class="primary">Generate Tests</button>
+                    <button id="explainBtn" class="secondary">Explain Tests</button>
+                </div>
             </div>
 
             <div class="pane result-pane">
                 <div class="result-head">
                     <div>
-                        <h2>📊 Generated Tests</h2>
+                        <h2>Results</h2>
                         <p id="status">Ready</p>
                     </div>
                     <div class="actions">
-                        <button id="copy" disabled>📋 Copy</button>
-                        <button id="download" disabled>💾 Download</button>
-                        <button id="run" disabled>▶️ Run Tests</button>
+                        <button id="copy" disabled>Copy</button>
+                        <button id="download" disabled>Download</button>
+                        <button id="run" disabled>Run Tests</button>
                     </div>
                 </div>
 
                 <div id="alert" class="alert" hidden></div>
+
+                <h3>Generated Tests</h3>
                 <pre class="code-box"><code id="tests" class="language-python"></code></pre>
 
-                <h2>📈 Test Output</h2>
+                <div id="explanation-section" hidden>
+                    <h3>Test Explanation</h3>
+                    <div id="explanation-content" class="explanation-box"></div>
+                </div>
+
+                <h3>Test Output</h3>
                 <pre id="output" class="output">No tests run yet.</pre>
+
+                <div id="analysis-output" class="analysis-box" hidden></div>
             </div>
         </section>
     </main>
@@ -64,9 +94,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script>
-        const state = { testFile: "", codeFile: "", language: "python", tests: "" };
+        const state = { testFile: "", codeFile: "", language: "python", tests: "", explanation: "" };
         const el = (id) => document.getElementById(id);
         const prismLanguage = { python: "python", java: "java", javascript: "javascript" };
+
+        document.querySelectorAll(".tab-btn").forEach((button) => {
+            button.addEventListener("click", () => {
+                document.querySelectorAll(".tab-btn").forEach((item) => item.classList.remove("active"));
+                document.querySelectorAll(".tab-content").forEach((item) => item.classList.remove("active"));
+                button.classList.add("active");
+                el("tab-" + button.dataset.tab).classList.add("active");
+            });
+        });
 
         el("file").addEventListener("change", () => {
             const file = el("file").files[0];
@@ -78,14 +117,21 @@
         });
 
         el("generate").addEventListener("click", async () => {
+            if (!el("code").value.trim() && !el("file").files[0]) {
+                showAlert("Please paste code or upload a file first.");
+                return;
+            }
+
             setBusy(true, "Generating tests...");
             clearAlert();
             el("output").textContent = "No tests run yet.";
+            el("explanation-section").hidden = true;
 
             const form = new FormData();
             form.append("language", el("language").value);
             form.append("code", el("code").value);
             form.append("requirements", el("requirements").value);
+            form.append("mode", el("mode").value);
             if (el("file").files[0]) form.append("code_file", el("file").files[0]);
 
             try {
@@ -94,13 +140,47 @@
                 state.codeFile = data.code_file;
                 state.language = data.language;
                 state.tests = data.tests;
+                state.explanation = data.explanation || "";
                 renderTests(data.tests, data.language);
                 setActions(true);
-                el("status").textContent = "✅ Generated " + data.test_file;
+                setStatus("Generated " + data.test_file);
             } catch (error) {
                 showAlert(error.message);
                 setActions(false);
-                el("status").textContent = "❌ Generation failed";
+                setStatus("Generation failed", true);
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        el("explainBtn").addEventListener("click", () => {
+            if (!state.explanation) {
+                showAlert("Generate tests first.");
+                return;
+            }
+            el("explanation-content").textContent = state.explanation;
+            el("explanation-section").hidden = false;
+        });
+
+        el("analyzeBtn").addEventListener("click", async () => {
+            if (!el("code").value.trim()) {
+                showAlert("Please paste code in the Code tab first.");
+                return;
+            }
+
+            setBusy(true, "Analyzing...");
+            clearAlert();
+            try {
+                const data = await postJson("/analyze_code", {
+                    code: el("code").value,
+                    language: el("language").value,
+                    description: el("description").value,
+                });
+                renderAnalysis(data.analysis);
+                setStatus("Analysis complete");
+            } catch (error) {
+                showAlert(error.message);
+                setStatus("Analysis failed", true);
             } finally {
                 setBusy(false);
             }
@@ -108,8 +188,7 @@
 
         el("copy").addEventListener("click", async () => {
             await navigator.clipboard.writeText(state.tests);
-            el("status").textContent = "📋 Copied!";
-            setTimeout(() => { el("status").textContent = "Ready"; }, 2000);
+            setStatus("Copied");
         });
 
         el("download").addEventListener("click", () => {
@@ -126,11 +205,11 @@
                     code_file: state.codeFile,
                 });
                 el("output").textContent = data.output || data.error || "No output.";
-                el("status").textContent = data.success ? "✅ Tests passed" : "❌ Tests failed";
+                setStatus(data.success ? "Tests passed" : "Tests failed", !data.success);
                 if (!data.success && data.error) showAlert(data.error);
             } catch (error) {
                 showAlert(error.message);
-                el("status").textContent = "❌ Run failed";
+                setStatus("Run failed", true);
             } finally {
                 setBusy(false);
             }
@@ -143,30 +222,51 @@
             Prism.highlightElement(codeEl);
         }
 
+        function renderAnalysis(analysis) {
+            const box = el("analysis-output");
+            box.hidden = false;
+            box.innerHTML = `
+                <h3>Code Analysis</h3>
+                <p><strong>Quality score:</strong> ${analysis.quality_score}/100</p>
+                <p><strong>Strengths:</strong> ${listText(analysis.strengths)}</p>
+                <p><strong>Weaknesses:</strong> ${listText(analysis.weaknesses)}</p>
+                <p><strong>Suggestions:</strong> ${listText(analysis.suggestions)}</p>
+                <p><strong>Readings:</strong> ${listText(analysis.readings)}</p>
+            `;
+        }
+
+        function listText(items) {
+            return items && items.length ? items.join(", ") : "None";
+        }
+
         async function postForm(url, body) {
-            const response = await fetch(url, { method: "POST", body });
-            return parseResponse(response);
+            return parseResponse(await fetch(url, { method: "POST", body }));
         }
 
         async function postJson(url, body) {
-            const response = await fetch(url, {
+            return parseResponse(await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
-            });
-            return parseResponse(response);
+            }));
         }
 
         async function parseResponse(response) {
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error("Server returned an invalid response.");
+            }
             if (!response.ok || data.success === false) throw new Error(data.error || "Request failed.");
             return data;
         }
 
         function setBusy(isBusy, text = "Ready") {
             el("generate").disabled = isBusy;
+            el("analyzeBtn").disabled = isBusy;
             el("run").disabled = isBusy || !state.testFile;
-            el("status").textContent = isBusy ? text : el("status").textContent;
+            if (isBusy) setStatus(text);
         }
 
         function setActions(enabled) {
@@ -175,8 +275,13 @@
             el("run").disabled = !enabled;
         }
 
+        function setStatus(message, isError = false) {
+            el("status").textContent = message;
+            el("status").classList.toggle("error-text", isError);
+        }
+
         function showAlert(message) {
-            el("alert").textContent = "⚠️ " + message;
+            el("alert").textContent = message;
             el("alert").hidden = false;
         }
 

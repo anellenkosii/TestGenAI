@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     openjdk-17-jdk \
     nodejs \
     npm \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies

@@ -124,6 +124,31 @@ select {
     flex-wrap: wrap;
 }
 
+.controls,
+.button-group,
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tab-buttons {
+    margin: 8px 0 12px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-btn.active,
+button.secondary {
+    border-color: var(--brand);
+}
+
 button,
 input::file-selector-button {
     border: 1px solid var(--line);
@@ -164,6 +189,19 @@ button:disabled {
     color: var(--danger);
     border-radius: 8px;
     padding: 12px;
+}
+
+.error-text {
+    color: var(--danger) !important;
+}
+
+.analysis-box,
+.explanation-box {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fbfcfb;
+    padding: 14px;
+    margin: 10px 0 18px;
 }
 
 .code-box,
