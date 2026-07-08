@@ -109,25 +109,45 @@ JUNIT_JAR=/path/to/junit-platform-console-standalone-1.10.2.jar
 text
 
 TestGenAI/
+
 ├── app.py              # Main Flask application
+
 ├── ai_generator.py     # AI test generation logic
+
 ├── test_runner.py      # Test execution engine
+
 ├── requirements.txt    # Python dependencies
+
 ├── .env               # Environment variables (gitignored)
+
 ├── .env.example       # Example environment configuration
+
 ├── uploads/           # Temporary upload directory
+
 ├── generated_tests/   # Generated test files
+
 ├── templates/
+
 │   └── index.html     # Main user interface
+
 ├── static/
+
 │   └── style.css      # Application styling
+
 ├── examples/          # Example code files
+
 │   ├── example_python.py
+
 │   ├── example_java.java
+
 │   └── example_javascript.js
+
 ├── Dockerfile         # Docker container configuration
+
 ├── docker-compose.yml # Docker Compose setup
+
 ├── LICENSE            # MIT License
+
 └── README.md          # This file
 
 🛠️ Tech Stack
