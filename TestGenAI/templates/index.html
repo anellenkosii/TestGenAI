@@ -1,237 +1,570 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TestGen AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TestGen AI - AI Test Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <main class="shell">
-        <section class="workspace">
+
+    <!-- ====== TOP NAV ====== -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="logo">
+                <span class="logo-icon">🧪</span>
+                <span class="logo-text">TestGen <span class="logo-highlight">AI</span></span>
+            </div>
+            <div class="header-badge">
+                <span class="badge-dot"></span>
+                <span class="badge-text">v1.0 · AI Powered</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====== MAIN LAYOUT ====== -->
+    <main class="app-main">
+
+        <!-- ====== STEP INDICATOR ====== -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <span class="step-num">1</span>
+                <span class="step-label">Input</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step2">
+                <span class="step-num">2</span>
+                <span class="step-label">Generate</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" id="step3">
+                <span class="step-num">3</span>
+                <span class="step-label">Results</span>
+            </div>
+        </div>
+
+        <!-- ====== TWO-COLUMN LAYOUT ====== -->
+        <div class="workspace">
+
+            <!-- ===== LEFT COLUMN: INPUT ===== -->
             <div class="pane input-pane">
-                <header class="topbar">
-                    <div>
-                        <h1>TestGen AI</h1>
-                        <p>Generate, inspect, and run unit tests.</p>
-                    </div>
-                    <div class="controls">
-                        <select id="language">
-                            <option value="python" selected>Python</option>
-                            <option value="java">Java</option>
-                            <option value="javascript">JavaScript</option>
-                        </select>
-                        <select id="mode">
-                            <option value="standard" selected>Standard</option>
-                            <option value="tdd">TDD</option>
-                        </select>
-                    </div>
-                </header>
 
-                <div class="tab-buttons">
-                    <button class="tab-btn active" data-tab="code">Code</button>
-                    <button class="tab-btn" data-tab="analyze">Analyze</button>
+                <!-- Language & Mode -->
+                <div class="pane-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><span class="label-icon">🌐</span> Language</label>
+                            <select id="language" class="form-select">
+                                <option value="python">🐍 Python</option>
+                                <option value="java">☕ Java</option>
+                                <option value="javascript">🟨 JavaScript</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><span class="label-icon">🔄</span> Mode</label>
+                            <select id="mode" class="form-select">
+                                <option value="standard">Standard</option>
+                                <option value="tdd">TDD (Test First)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="tab-code" class="tab-content active">
-                    <label for="code">Code</label>
-                    <textarea id="code" spellcheck="false" placeholder="Paste code here"></textarea>
-                    <div class="file-row">
-                        <input id="file" type="file" accept=".py,.java,.js">
-                        <span id="fileName">No file selected</span>
+                <!-- Tabs -->
+                <div class="pane-section">
+                    <div class="tab-bar">
+                        <button class="tab-btn active" data-tab="code">✏️ Code</button>
+                        <button class="tab-btn" data-tab="analyze">📊 Analyze</button>
                     </div>
-                    <label for="requirements">Requirements</label>
-                    <textarea id="requirements" class="short" spellcheck="false" placeholder="What should this code do?"></textarea>
+
+                    <!-- Tab: Code -->
+                    <div id="tab-code" class="tab-pane active">
+                        <div class="code-input-wrapper">
+                            <textarea id="code" class="code-input" spellcheck="false" placeholder="Paste your code here..."></textarea>
+                            <div class="code-input-actions">
+                                <label class="file-upload-btn">
+                                    <input type="file" id="file" accept=".py,.java,.js" />
+                                    📎 Upload File
+                                </label>
+                                <span id="fileName" class="file-name">No file selected</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><span class="label-icon">📋</span> Requirements</label>
+                            <textarea id="requirements" class="requirements-input" spellcheck="false" placeholder="What should this code do? (e.g., 'The function should add two numbers and handle division by zero')"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Analyze -->
+                    <div id="tab-analyze" class="tab-pane">
+                        <div class="form-group">
+                            <label><span class="label-icon">📝</span> Project Description</label>
+                            <textarea id="description" class="requirements-input" spellcheck="false" placeholder="Describe what you're building. Include expected behavior, inputs, outputs, and edge cases."></textarea>
+                        </div>
+                        <button id="analyzeBtn" class="btn btn-secondary btn-block">🔍 Analyze Code Quality</button>
+                        <div id="analysisResult" class="analysis-result"></div>
+                    </div>
                 </div>
 
-                <div id="tab-analyze" class="tab-content">
-                    <label for="description">Project Description</label>
-                    <textarea id="description" class="short" spellcheck="false" placeholder="Describe the expected behavior"></textarea>
-                    <button id="analyzeBtn" class="secondary">Analyze Code</button>
-                    <div id="analysisResult"></div>
-                </div>
+                <!-- Generate Button -->
+                <button id="generate" class="btn btn-primary btn-generate">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-text">Generate Tests</span>
+                </button>
 
-                <div class="button-group">
-                    <button id="generate" class="primary">Generate Tests</button>
-                    <button id="explainBtn" class="secondary">Explain Tests</button>
+                <!-- Quick Tips -->
+                <div class="quick-tips">
+                    <span class="tip">💡 Tip: Add requirements for better tests</span>
+                    <span class="tip">📂 Supports .py .java .js</span>
                 </div>
             </div>
 
+            <!-- ===== RIGHT COLUMN: RESULTS ===== -->
             <div class="pane result-pane">
-                <div class="result-head">
-                    <div>
-                        <h2>Results</h2>
-                        <p id="status">Ready</p>
+
+                <!-- Status Bar -->
+                <div class="result-header">
+                    <div class="result-status">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText" class="status-text">Ready</span>
                     </div>
-                    <div class="actions">
-                        <button id="copy" disabled>Copy</button>
-                        <button id="download" disabled>Download</button>
-                        <button id="run" disabled>Run Tests</button>
+                    <div class="result-actions">
+                        <button id="copy" class="action-btn" disabled title="Copy tests">📋</button>
+                        <button id="download" class="action-btn" disabled title="Download test file">💾</button>
+                        <button id="downloadReport" class="action-btn" disabled title="Download QA report">📄</button>
+                        <button id="run" class="action-btn action-btn-run" disabled title="Run tests">▶️</button>
                     </div>
                 </div>
 
+                <!-- Alert -->
                 <div id="alert" class="alert" hidden></div>
 
-                <h3>Generated Tests</h3>
-                <pre class="code-box"><code id="tests" class="language-python"></code></pre>
+                <!-- Loading Overlay (shown during generation) -->
+                <div id="loadingOverlay" class="loading-overlay" hidden>
+                    <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text" id="loadingText">Generating tests...</div>
+                        <div class="loading-progress">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="loading-steps">
+                            <span class="loading-step" id="loadStep1">📝 Reading code</span>
+                            <span class="loading-step" id="loadStep2">🧠 AI thinking</span>
+                            <span class="loading-step" id="loadStep3">📊 Generating tests</span>
+                            <span class="loading-step" id="loadStep4">✅ Done</span>
+                        </div>
+                    </div>
+                </div>
 
-                <div id="explanation-section" hidden>
-                    <h3>Test Explanation</h3>
+                <!-- Tests Output -->
+                <div class="output-section">
+                    <div class="section-label">
+                        <span>📝 Generated Tests</span>
+                        <span id="testCount" class="count-badge">0 tests</span>
+                    </div>
+                    <pre class="code-display"><code id="tests" class="language-python"></code></pre>
+                </div>
+
+                <!-- Explanation (hidden by default) -->
+                <div id="explanation-section" class="output-section" hidden>
+                    <div class="section-label">
+                        <span>💡 Test Explanation</span>
+                    </div>
                     <div id="explanation-content" class="explanation-box"></div>
                 </div>
 
-                <h3>Test Output</h3>
-                <pre id="output" class="output">No tests run yet.</pre>
+                <!-- Test Output -->
+                <div class="output-section">
+                    <div class="section-label">
+                        <span>📊 Test Output</span>
+                        <span id="outputSummary" class="summary-badge">—</span>
+                    </div>
+                    <pre id="output" class="output-display">No tests run yet. Click ▶️ to execute.</pre>
+                </div>
 
+                <!-- Analysis Output (hidden by default) -->
                 <div id="analysis-output" class="analysis-box" hidden></div>
             </div>
-        </section>
+
+        </div><!-- /workspace -->
+
     </main>
+
+    <!-- ====== FOOTER ====== -->
+    <footer class="app-footer">
+        <span>Made with ❤️ for better testing</span>
+        <span class="footer-divider">·</span>
+        <span>OpenAI · Ollama · Flask</span>
+    </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script>
-        const state = { testFile: "", codeFile: "", language: "python", tests: "", explanation: "" };
-        const el = (id) => document.getElementById(id);
-        const prismLanguage = { python: "python", java: "java", javascript: "javascript" };
+        // ============================================================
+        // STATE
+        // ============================================================
+        const state = {
+            testFile: "",
+            codeFile: "",
+            language: "python",
+            tests: "",
+            explanation: "",
+            analysis: {},
+            isGenerating: false,
+            isRunning: false,
+        };
 
-        document.querySelectorAll(".tab-btn").forEach((button) => {
-            button.addEventListener("click", () => {
-                document.querySelectorAll(".tab-btn").forEach((item) => item.classList.remove("active"));
-                document.querySelectorAll(".tab-content").forEach((item) => item.classList.remove("active"));
-                button.classList.add("active");
-                el("tab-" + button.dataset.tab).classList.add("active");
+        // ============================================================
+        // DOM REFS
+        // ============================================================
+        const $ = (id) => document.getElementById(id);
+        const els = {
+            language: $("language"),
+            mode: $("mode"),
+            code: $("code"),
+            file: $("file"),
+            fileName: $("fileName"),
+            requirements: $("requirements"),
+            description: $("description"),
+            generate: $("generate"),
+            analyzeBtn: $("analyzeBtn"),
+            copy: $("copy"),
+            download: $("download"),
+            downloadReport: $("downloadReport"),
+            run: $("run"),
+            tests: $("tests"),
+            output: $("output"),
+            statusText: $("statusText"),
+            statusDot: $("statusDot"),
+            alert: $("alert"),
+            explanationSection: $("explanation-section"),
+            explanationContent: $("explanation-content"),
+            analysisOutput: $("analysis-output"),
+            testCount: $("testCount"),
+            outputSummary: $("outputSummary"),
+            step1: $("step1"),
+            step2: $("step2"),
+            step3: $("step3"),
+            loadingOverlay: $("loadingOverlay"),
+            loadingText: $("loadingText"),
+            progressBar: $("progressBar"),
+            loadStep1: $("loadStep1"),
+            loadStep2: $("loadStep2"),
+            loadStep3: $("loadStep3"),
+            loadStep4: $("loadStep4"),
+        };
+        const prismMap = { python: "python", java: "java", javascript: "javascript" };
+
+        // ============================================================
+        // TAB SWITCHING
+        // ============================================================
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+                document.querySelectorAll(".tab-pane").forEach((p) => p.classList.remove("active"));
+                btn.classList.add("active");
+                $("tab-" + btn.dataset.tab).classList.add("active");
             });
         });
 
-        el("file").addEventListener("change", () => {
-            const file = el("file").files[0];
-            el("fileName").textContent = file ? file.name : "No file selected";
+        // ============================================================
+        // FILE UPLOAD
+        // ============================================================
+        els.file.addEventListener("change", () => {
+            const file = els.file.files[0];
+            els.fileName.textContent = file ? file.name : "No file selected";
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = () => { el("code").value = reader.result; };
+            reader.onload = () => { els.code.value = reader.result; };
             reader.readAsText(file);
         });
 
-        el("generate").addEventListener("click", async () => {
-            if (!el("code").value.trim() && !el("file").files[0]) {
+        // ============================================================
+        // LOADING OVERLAY
+        // ============================================================
+        function showLoading(text, progress = 0) {
+            els.loadingOverlay.hidden = false;
+            els.loadingText.textContent = text;
+            els.progressBar.style.width = progress + "%";
+            // Reset steps
+            ["loadStep1", "loadStep2", "loadStep3", "loadStep4"].forEach((id, i) => {
+                const el = $(id);
+                el.classList.remove("active", "done");
+                if (i === 0) el.classList.add("active");
+            });
+        }
+
+        function updateLoading(text, progress, step) {
+            els.loadingText.textContent = text;
+            els.progressBar.style.width = progress + "%";
+            // Update steps
+            ["loadStep1", "loadStep2", "loadStep3", "loadStep4"].forEach((id) => {
+                $(id).classList.remove("active", "done");
+            });
+            for (let i = 0; i <= step; i++) {
+                const el = $("loadStep" + (i + 1));
+                if (i < step) el.classList.add("done");
+                else if (i === step) el.classList.add("active");
+            }
+        }
+
+        function hideLoading() {
+            els.loadingOverlay.hidden = true;
+            els.progressBar.style.width = "0%";
+        }
+
+        // ============================================================
+        // GENERATE TESTS
+        // ============================================================
+        els.generate.addEventListener("click", async () => {
+            const code = els.code.value.trim();
+            const file = els.file.files[0];
+            if (!code && !file) {
                 showAlert("Please paste code or upload a file first.");
                 return;
             }
 
-            setBusy(true, "Generating tests...");
+            state.isGenerating = true;
             clearAlert();
-            el("output").textContent = "No tests run yet.";
-            el("explanation-section").hidden = true;
+            els.output.textContent = "";
+            els.explanationSection.hidden = true;
+            updateStep(2);
+            setActions(false);
+
+            // Show loading overlay
+            showLoading("Preparing code...", 10);
 
             const form = new FormData();
-            form.append("language", el("language").value);
-            form.append("code", el("code").value);
-            form.append("requirements", el("requirements").value);
-            form.append("mode", el("mode").value);
-            if (el("file").files[0]) form.append("code_file", el("file").files[0]);
+            form.append("language", els.language.value);
+            form.append("code", code);
+            form.append("requirements", els.requirements.value);
+            form.append("mode", els.mode.value);
+            if (file) form.append("code_file", file);
 
             try {
+                // Step 1: Reading code
+                updateLoading("Reading and validating code...", 25, 1);
+
+                // Simulate processing delay
+                await sleep(500);
+
+                // Step 2: AI thinking
+                updateLoading("AI is analyzing your code...", 50, 2);
+
                 const data = await postForm("/generate_tests", form);
+
+                // Step 3: Generating
+                updateLoading("Generating tests...", 75, 3);
+
+                await sleep(500);
+
                 state.testFile = data.test_file;
                 state.codeFile = data.code_file;
                 state.language = data.language;
                 state.tests = data.tests;
                 state.explanation = data.explanation || "";
+
+                // Step 4: Done
+                updateLoading("✨ Done! Tests generated successfully.", 100, 4);
+
+                await sleep(400);
+
+                hideLoading();
                 renderTests(data.tests, data.language);
                 setActions(true);
-                setStatus("Generated " + data.test_file);
+                setStatus("✅ Generated " + data.test_file, "success");
+                updateStep(3);
+                updateTestCount(data.tests);
+
             } catch (error) {
+                hideLoading();
                 showAlert(error.message);
                 setActions(false);
-                setStatus("Generation failed", true);
+                setStatus("❌ Generation failed", "error");
             } finally {
-                setBusy(false);
+                state.isGenerating = false;
             }
         });
 
-        el("explainBtn").addEventListener("click", () => {
-            if (!state.explanation) {
-                showAlert("Generate tests first.");
-                return;
-            }
-            el("explanation-content").textContent = state.explanation;
-            el("explanation-section").hidden = false;
-        });
-
-        el("analyzeBtn").addEventListener("click", async () => {
-            if (!el("code").value.trim()) {
+        // ============================================================
+        // ANALYZE CODE
+        // ============================================================
+        els.analyzeBtn.addEventListener("click", async () => {
+            const code = els.code.value.trim();
+            if (!code) {
                 showAlert("Please paste code in the Code tab first.");
                 return;
             }
 
-            setBusy(true, "Analyzing...");
             clearAlert();
+            showLoading("Analyzing code...", 30);
+
             try {
+                updateLoading("Checking code structure...", 50, 1);
+                await sleep(400);
+
                 const data = await postJson("/analyze_code", {
-                    code: el("code").value,
-                    language: el("language").value,
-                    description: el("description").value,
+                    code: code,
+                    language: els.language.value,
+                    description: els.description.value,
                 });
+
+                updateLoading("Generating analysis report...", 80, 2);
+                await sleep(400);
+
+                state.analysis = data.analysis;
                 renderAnalysis(data.analysis);
-                setStatus("Analysis complete");
+                updateLoading("✅ Analysis complete!", 100, 3);
+
+                await sleep(400);
+                hideLoading();
+                setStatus("✅ Analysis complete", "success");
+
             } catch (error) {
+                hideLoading();
                 showAlert(error.message);
-                setStatus("Analysis failed", true);
-            } finally {
-                setBusy(false);
+                setStatus("❌ Analysis failed", "error");
             }
         });
 
-        el("copy").addEventListener("click", async () => {
-            await navigator.clipboard.writeText(state.tests);
-            setStatus("Copied");
-        });
+        // ============================================================
+        // RUN TESTS
+        // ============================================================
+        els.run.addEventListener("click", async () => {
+            if (!state.testFile) {
+                showAlert("Generate tests first.");
+                return;
+            }
 
-        el("download").addEventListener("click", () => {
-            if (state.testFile) window.location.href = "/download_test/" + encodeURIComponent(state.testFile);
-        });
-
-        el("run").addEventListener("click", async () => {
-            setBusy(true, "Running tests...");
+            state.isRunning = true;
             clearAlert();
+            els.output.textContent = "⏳ Running tests...";
+
             try {
                 const data = await postJson("/run_tests", {
                     language: state.language,
                     test_file: state.testFile,
                     code_file: state.codeFile,
                 });
-                el("output").textContent = data.output || data.error || "No output.";
-                setStatus(data.success ? "Tests passed" : "Tests failed", !data.success);
+
+                els.output.textContent = data.output || data.error || "No output.";
+                const passed = data.passed || 0;
+                const failed = data.failed || 0;
+                const total = data.total || 0;
+
+                if (data.success) {
+                    setStatus(`✅ ${passed}/${total} tests passed`, "success");
+                    els.outputSummary.textContent = `✅ ${passed} passed · ${failed} failed`;
+                } else {
+                    setStatus(`❌ ${failed}/${total} tests failed`, "error");
+                    els.outputSummary.textContent = `❌ ${failed} failed · ${passed} passed`;
+                }
+
                 if (!data.success && data.error) showAlert(data.error);
+
             } catch (error) {
                 showAlert(error.message);
-                setStatus("Run failed", true);
+                setStatus("❌ Run failed", "error");
             } finally {
-                setBusy(false);
+                state.isRunning = false;
             }
         });
 
+        // ============================================================
+        // COPY
+        // ============================================================
+        els.copy.addEventListener("click", async () => {
+            await navigator.clipboard.writeText(state.tests);
+            setStatus("📋 Copied!", "success");
+            setTimeout(() => setStatus("Ready"), 2000);
+        });
+
+        // ============================================================
+        // DOWNLOAD TEST
+        // ============================================================
+        els.download.addEventListener("click", () => {
+            if (state.testFile) {
+                window.location.href = "/download_test/" + encodeURIComponent(state.testFile);
+                setStatus("💾 Downloading...", "success");
+            }
+        });
+
+        // ============================================================
+        // DOWNLOAD REPORT
+        // ============================================================
+        els.downloadReport.addEventListener("click", async () => {
+            if (!state.tests) {
+                showAlert("Generate tests first.");
+                return;
+            }
+            try {
+                const response = await fetch("/download_report", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        tests: state.tests,
+                        language: state.language,
+                        analysis: state.analysis,
+                    }),
+                });
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `qa_report_${state.language}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                setStatus("📄 Report downloaded", "success");
+            } catch (error) {
+                showAlert("Failed to download report: " + error.message);
+            }
+        });
+
+        // ============================================================
+        // EXPLAIN TESTS
+        // ============================================================
+        document.querySelector(".btn-explain")?.addEventListener("click", () => {
+            if (!state.explanation) {
+                showAlert("Generate tests first.");
+                return;
+            }
+            els.explanationContent.textContent = state.explanation;
+            els.explanationSection.hidden = false;
+        });
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
         function renderTests(code, language) {
-            const codeEl = el("tests");
-            codeEl.className = "language-" + prismLanguage[language];
+            const codeEl = els.tests;
+            codeEl.className = "language-" + prismMap[language];
             codeEl.textContent = code;
             Prism.highlightElement(codeEl);
         }
 
         function renderAnalysis(analysis) {
-            const box = el("analysis-output");
+            const box = els.analysisOutput;
             box.hidden = false;
             box.innerHTML = `
-                <h3>Code Analysis</h3>
-                <p><strong>Quality score:</strong> ${analysis.quality_score}/100</p>
-                <p><strong>Strengths:</strong> ${listText(analysis.strengths)}</p>
-                <p><strong>Weaknesses:</strong> ${listText(analysis.weaknesses)}</p>
-                <p><strong>Suggestions:</strong> ${listText(analysis.suggestions)}</p>
-                <p><strong>Readings:</strong> ${listText(analysis.readings)}</p>
+                <h4>📊 Code Analysis</h4>
+                <div class="score-ring">
+                    <span class="score-number">${analysis.quality_score}</span>
+                    <span class="score-label">Quality Score</span>
+                </div>
+                <div class="analysis-grid">
+                    <div><strong>✅ Strengths:</strong> ${listText(analysis.strengths)}</div>
+                    <div><strong>⚠️ Weaknesses:</strong> ${listText(analysis.weaknesses)}</div>
+                    <div><strong>💡 Suggestions:</strong> ${listText(analysis.suggestions)}</div>
+                    <div><strong>📚 Readings:</strong> ${listText(analysis.readings)}</div>
+                </div>
             `;
         }
 
@@ -239,6 +572,45 @@
             return items && items.length ? items.join(", ") : "None";
         }
 
+        function updateTestCount(tests) {
+            const count = (tests.match(/test_|@Test|it\(|test\(/g) || []).length;
+            els.testCount.textContent = count + " tests";
+        }
+
+        function updateStep(step) {
+            [els.step1, els.step2, els.step3].forEach((el, i) => {
+                el.classList.toggle("active", i + 1 === step);
+                el.classList.toggle("done", i + 1 < step);
+            });
+        }
+
+        function setActions(enabled) {
+            els.copy.disabled = !enabled;
+            els.download.disabled = !enabled;
+            els.downloadReport.disabled = !enabled;
+            els.run.disabled = !enabled;
+        }
+
+        function setStatus(message, type = "info") {
+            els.statusText.textContent = message;
+            els.statusDot.className = "status-dot " + type;
+        }
+
+        function showAlert(message) {
+            const alert = els.alert;
+            alert.textContent = "⚠️ " + message;
+            alert.hidden = false;
+            setTimeout(() => { alert.hidden = true; }, 5000);
+        }
+
+        function clearAlert() {
+            els.alert.hidden = true;
+            els.alert.textContent = "";
+        }
+
+        // ============================================================
+        // API HELPERS
+        // ============================================================
         async function postForm(url, body) {
             return parseResponse(await fetch(url, { method: "POST", body }));
         }
@@ -258,37 +630,18 @@
             } catch {
                 throw new Error("Server returned an invalid response.");
             }
-            if (!response.ok || data.success === false) throw new Error(data.error || "Request failed.");
+            if (!response.ok || data.success === false) {
+                throw new Error(data.error || "Request failed.");
+            }
             return data;
         }
 
-        function setBusy(isBusy, text = "Ready") {
-            el("generate").disabled = isBusy;
-            el("analyzeBtn").disabled = isBusy;
-            el("run").disabled = isBusy || !state.testFile;
-            if (isBusy) setStatus(text);
-        }
-
-        function setActions(enabled) {
-            el("copy").disabled = !enabled;
-            el("download").disabled = !enabled;
-            el("run").disabled = !enabled;
-        }
-
-        function setStatus(message, isError = false) {
-            el("status").textContent = message;
-            el("status").classList.toggle("error-text", isError);
-        }
-
-        function showAlert(message) {
-            el("alert").textContent = message;
-            el("alert").hidden = false;
-        }
-
-        function clearAlert() {
-            el("alert").hidden = true;
-            el("alert").textContent = "";
-        }
+        // ============================================================
+        // INIT
+        // ============================================================
+        setStatus("Ready", "info");
+        updateStep(1);
     </script>
+
 </body>
 </html>
