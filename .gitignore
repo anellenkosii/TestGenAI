@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-.env
 .venv/
 venv/
 ENV/
@@ -12,6 +11,12 @@ env/
 dist/
 build/
 *.egg-info/
+
+# Environment files — never commit real credentials.
+# Only .env.example (checked in on purpose) is allowed.
+.env
+.env.*
+!.env.example
 
 # Flask
 instance/
@@ -22,6 +27,7 @@ uploads/
 generated_tests/
 *.log
 *.db
+*.jar
 
 # IDE
 .vscode/
@@ -33,6 +39,8 @@ generated_tests/
 .DS_Store
 Thumbs.db
 
-# Test files
-*.pyc
+# Test artifacts
 .pytest_cache/
+.coverage
+htmlcov/
+node_modules/

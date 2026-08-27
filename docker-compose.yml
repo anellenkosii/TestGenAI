@@ -1,16 +1,16 @@
-# docker-compose.yml - For running Java tests in a container
-version: '3.8'
-
+# docker-compose.yml — run TestGen AI with Python, Java, and JS test runners
+# available inside the container.
 services:
   testgen-ai:
     build: .
     ports:
-      - "5000:5000"
+      - "5002:5002"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
       - USE_OLLAMA=${USE_OLLAMA:-false}
-      - JUNIT_JAR=/app/junit-platform-console-standalone-1.10.2.jar
+      - FLASK_DEBUG=false
+      - PORT=5002
     volumes:
       - ./uploads:/app/uploads
       - ./generated_tests:/app/generated_tests
-    command: python app.py
